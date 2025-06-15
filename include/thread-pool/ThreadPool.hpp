@@ -33,27 +33,31 @@ ThreadPool::ThreadPool() :
     _threads{new pthread_t[DEFAULT_THREADS]},
     _queue{}
 {
-    // std::cout << "ThreadPool initialization" << std::endl;
     for(int i = 0; i < _size; i++) {
         pthread_create(&_threads[i], NULL, ThreadHandler, this);
     }
-    // std::cout << "ThreadPool created size: " << _size << std::endl;
 }
 
 ThreadPool::~ThreadPool() {
+    for(int i = 0;i < _size; ++i) {
+        Task sentinal_task;
+        sentinal_task.taskFunction = nullptr;
+        sentinal_task.args = nullptr;
+        _queue.push(sentinal_task);
+    }
+
     for (int i = 0; i < _size; i++) {
-        pthread_cancel(_threads[i]);
+        pthread_join(_threads[i], NULL);
     }
     delete[] _threads;
 }
 
 void* ThreadPool::ThreadHandler(void* args) {
     ThreadPool* pool = (ThreadPool*) args;
-    std::cout << "thread created" << std::endl;
     while (true) {
         Task task = pool->_queue.pop();
         if (task.taskFunction == nullptr) {
-            std::cout << "Invalid task ignoring..." << std::endl;
+            break;
         } else {
             task.taskFunction(task.args);
         }

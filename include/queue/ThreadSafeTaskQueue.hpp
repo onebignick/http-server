@@ -8,7 +8,7 @@
 #include "queue/queue.h"
 
 template<typename T>
-class ThreadSafeTaskQueue : public Queue<T> {
+class ThreadSafeTaskQueue final : public Queue<T> {
     private:
     int _size;
     int _capacity;
@@ -25,8 +25,8 @@ class ThreadSafeTaskQueue : public Queue<T> {
     ThreadSafeTaskQueue(int);
 
     // modifiers
-    void push(T value);
-    T pop();
+    void push(T value) override;
+    T pop() override;
 };
 
 template<typename T>
@@ -45,6 +45,9 @@ ThreadSafeTaskQueue<T>::ThreadSafeTaskQueue() :
 template<typename T>
 ThreadSafeTaskQueue<T>::~ThreadSafeTaskQueue() {
     delete[] _queue;
+    pthread_mutex_destroy(&lock);
+    pthread_cond_destroy(&not_full);
+    pthread_cond_destroy(&not_empty);
 }
 
 // constructors
